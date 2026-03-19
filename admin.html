@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕵️ Hunt HQ — Admin Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#0a0806;--surface:#141008;--surface2:#1c1610;--border:rgba(184,134,11,.2);--gold:#b8860b;--gold-l:#d4a017;--green:#1e5c33;--green-l:#5fc47a;--purple:#4a1d7a;--purple-l:#b07fe0;--blood:#8b1a1a;--blood-l:#e74c3c;--text:#e8dcc8;--dim:#8a7a60;--amber:#d4860a;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Text',serif;min-height:100vh}
+.topbar{background:#0d0a05;border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:var(--gold);display:flex;align-items:center;gap:10px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--blood-l);animation:blink 1.2s infinite}
+.live-dot.connected{background:var(--green-l)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.timer{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold);background:rgba(184,134,11,.1);border:1px solid var(--border);padding:4px 12px;border-radius:3px;min-width:70px;text-align:center}
+.sound-btn{background:rgba(184,134,11,.1);border:1px solid var(--border);color:var(--gold);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:5px 12px;border-radius:3px;cursor:pointer;transition:all .2s}
+.sound-btn:hover{background:rgba(184,134,11,.2)}
+.sound-btn.muted{opacity:.4}
+.main{max-width:900px;margin:0 auto;padding:18px 14px 40px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:580px){.main{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.card-head{background:var(--surface2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.card-head h2{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.card-body{padding:14px}
+.status-pill{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 10px;border-radius:3px}
+.status-pill.idle{background:rgba(138,122,96,.15);color:var(--dim);border:1px solid rgba(138,122,96,.3)}
+.status-pill.hunting{background:rgba(212,134,10,.15);color:var(--amber);border:1px solid rgba(212,134,10,.3)}
+.status-pill.final{background:rgba(139,26,26,.2);color:var(--blood-l);border:1px solid rgba(139,26,26,.4)}
+.status-pill.done{background:rgba(30,92,51,.2);color:var(--green-l);border:1px solid var(--green)}
+.pip-row{display:flex;gap:5px;margin-bottom:12px}
+.pip{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.07);transition:background .4s}
+.pip.solved-g{background:var(--green-l)}.pip.solved-p{background:var(--purple-l)}
+.pip.cur-g,.pip.cur-p{background:var(--amber);animation:breathe 1.5s infinite}
+@keyframes breathe{0%,100%{opacity:1}50%{opacity:.35}}
+.stat{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:14px}
+.stat:last-child{border-bottom:none}
+.stat-l{color:var(--dim);font-size:13px}
+.stat-v{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text)}
+.stat-v.hl{color:var(--gold-l);font-weight:600}.stat-v.g{color:var(--green-l)}.stat-v.p{color:var(--purple-l)}
+#map{width:100%;height:320px;border-radius:2px}
+.map-legend{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--dim)}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.log-wrap{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.log-row{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;align-items:flex-start;animation:fadeup .3s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.log-row:last-child{border-bottom:none}
+.log-t{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim);white-space:nowrap;padding-top:2px;flex-shrink:0}
+.log-ico{font-size:13px;flex-shrink:0}
+.log-msg{line-height:1.5;color:var(--text)}
+.tag{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:1px 6px;border-radius:2px;margin-right:4px}
+.tag.g{background:rgba(30,92,51,.3);color:var(--green-l)}.tag.p{background:rgba(74,29,122,.3);color:var(--purple-l)}
+.alert{display:none;position:fixed;top:58px;left:50%;transform:translateX(-50%);background:var(--green);border:1px solid var(--green-l);color:var(--green-l);font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;padding:11px 22px;border-radius:3px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:nowrap;animation:dropin .3s cubic-bezier(.22,.68,0,1.2)}
+@keyframes dropin{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+.setup{background:rgba(139,26,26,.12);border:1px solid rgba(139,26,26,.35);border-radius:3px;padding:14px 16px;margin-bottom:14px;font-size:13.5px;line-height:1.7;color:#e8b4b4}
+.setup h3{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--blood-l);margin-bottom:8px}
+.setup code{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(0,0,0,.3);padding:2px 6px;border-radius:2px;color:var(--gold-l)}
+.setup a{color:var(--gold)}
+.dismiss-btn{background:rgba(184,134,11,.15);border:1px solid var(--border);color:var(--gold);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:5px 14px;border-radius:3px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">
+    <div class="live-dot" id="live-dot"></div>
+    🕵️ HUNT HQ
+  </div>
+  <div class="topbar-right">
+    <div class="timer" id="g-timer">00:00</div>
+    <button class="sound-btn" id="sound-btn" onclick="toggleSound()">🔊 SOUND ON</button>
+  </div>
+</div>
+
+<div class="alert" id="alert"></div>
+
+<div class="main">
+
+  <!-- SETUP NOTICE -->
+  <div class="full" id="setup-wrap">
+    <div class="setup">
+      <h3>⚙ SUPABASE SETUP — DO THIS ONCE (3 MIN)</h3>
+      <ol style="margin:8px 0 10px 18px;line-height:2.2">
+        <li>Go to <a href="https://supabase.com" target="_blank">supabase.com</a> → <strong>New project</strong> (free, no credit card)</li>
+        <li>Wait ~1 min for it to spin up, then go to <strong>SQL Editor</strong> and run this once:<br>
+          <code>CREATE TABLE hunt_progress (hunt_id text, team_id text, status text, current_clue int, clues_solved int, last_solved text, last_solved_at timestamptz, started_at timestamptz, finished_at timestamptz, final_time_sec int, elapsed_sec int, hints_used int, penalty_sec int, team_name text, updated_at timestamptz, PRIMARY KEY (hunt_id, team_id));</code>
+        </li>
+        <li>Go to <strong>Settings → API</strong> → copy <strong>Project URL</strong> and <strong>anon public key</strong></li>
+        <li>Open <strong>both</strong> HTML files in a text editor → find <code>PASTE_YOUR_PROJECT_URL_HERE</code> and <code>PASTE_YOUR_ANON_PUBLIC_KEY_HERE</code> → replace in both files</li>
+        <li>Reload this page — the dot top-left turns green when connected ✓</li>
+      </ol>
+      <button class="dismiss-btn" onclick="document.getElementById('setup-wrap').style.display='none'">DISMISS (ALREADY DONE)</button>
+    </div>
+  </div>
+
+  <!-- RAVENS -->
+  <div class="card" id="card-green">
+    <div class="card-head"><h2>🌿 The Ravens</h2><div class="status-pill idle" id="gs-pill">WAITING</div></div>
+    <div class="card-body">
+      <div class="pip-row" id="g-pips">
+        <div class="pip" id="gp0"></div><div class="pip" id="gp1"></div><div class="pip" id="gp2"></div>
+        <div class="pip" id="gp3"></div><div class="pip" id="gp4"></div><div class="pip" id="gp5"></div>
+      </div>
+      <div class="stat"><span class="stat-l">Current clue</span><span class="stat-v hl" id="g-clue">—</span></div>
+      <div class="stat"><span class="stat-l">Clues solved</span><span class="stat-v g" id="g-solved">0 / 6</span></div>
+      <div class="stat"><span class="stat-l">Last solved</span><span class="stat-v" id="g-last">—</span></div>
+      <div class="stat"><span class="stat-l">Hints used</span><span class="stat-v" id="g-hints">0 (+0s)</span></div>
+      <div class="stat"><span class="stat-l">Elapsed</span><span class="stat-v" id="g-elapsed">—</span></div>
+    </div>
+  </div>
+
+  <!-- FOXES -->
+  <div class="card" id="card-purple">
+    <div class="card-head"><h2>🦋 The Foxes</h2><div class="status-pill idle" id="ps-pill">WAITING</div></div>
+    <div class="card-body">
+      <div class="pip-row" id="p-pips">
+        <div class="pip" id="pp0"></div><div class="pip" id="pp1"></div><div class="pip" id="pp2"></div>
+        <div class="pip" id="pp3"></div><div class="pip" id="pp4"></div><div class="pip" id="pp5"></div>
+      </div>
+      <div class="stat"><span class="stat-l">Current clue</span><span class="stat-v hl" id="p-clue">—</span></div>
+      <div class="stat"><span class="stat-l">Clues solved</span><span class="stat-v p" id="p-solved">0 / 6</span></div>
+      <div class="stat"><span class="stat-l">Last solved</span><span class="stat-v" id="p-last">—</span></div>
+      <div class="stat"><span class="stat-l">Hints used</span><span class="stat-v" id="p-hints">0 (+0s)</span></div>
+      <div class="stat"><span class="stat-l">Elapsed</span><span class="stat-v" id="p-elapsed">—</span></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="card full">
+    <div class="card-head"><h2>📍 Clue Locations — Spencer St, Port Alberni</h2></div>
+    <div class="card-body" style="padding:10px">
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#b8860b"></div>Unsolved clue</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#5fc47a"></div>Solved by Ravens</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#b07fe0"></div>Solved by Foxes</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#e74c3c"></div>Solved by both</div>
+      </div>
+      <p style="font-size:11px;color:var(--dim);margin-top:9px;font-style:italic">ℹ Markers show approximate clue locations within walking distance of 4984 Spencer St. Use Find My / Life360 for kids' actual GPS positions.</p>
+    </div>
+  </div>
+
+  <!-- EVENT LOG -->
+  <div class="card full">
+    <div class="card-head"><h2>📋 Live Event Log</h2></div>
+    <div class="card-body" style="padding:8px 14px">
+      <div class="log-wrap" id="log-wrap">
+        <div class="log-row"><div class="log-t">--:--</div><div class="log-ico">⏳</div><div class="log-msg">Waiting for teams to begin…</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ╔══════════════════════════════════════════════════╗
+// ║  PASTE YOUR SUPABASE VALUES HERE (same as game) ║
+// ╚══════════════════════════════════════════════════╝
+const SUPABASE_URL = 'https://ppctgsfzpylpyryoufgm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1FfCl66XeOg6mYRnnrxmRg_Vw_N0WW0';
+const HUNT_ID = 'maple_2024';
+
+// ── Clue locations around 4984 Spencer St ─────────
+// All within ~270m walking distance
+const CLUE_META = [
+  { name:'Hedge',   word:'HEDGE',   lat:49.2481, lng:-124.8063, raven:1, fox:4 },
+  { name:'Odd #',   word:'ODD',     lat:49.2492, lng:-124.8048, raven:2, fox:5 },
+  { name:'Leaf',    word:'LEAF',    lat:49.2474, lng:-124.8057, raven:3, fox:6 },
+  { name:'License', word:'LICENSE', lat:49.2498, lng:-124.8070, raven:4, fox:1 },
+  { name:'Open',    word:'OPEN',    lat:49.2484, lng:-124.8078, raven:5, fox:2 },
+  { name:'Welcome', word:'WELCOME', lat:49.2468, lng:-124.8063, raven:6, fox:3 },
+];
+
+var soundOn=true, huntStartMs=null, timerIv=null, prev={green:null,purple:null};
+var mapObj, markers=[], audioCtx=null;
+
+// ── AUDIO ──────────────────────────────────────────
+function getCtx(){ if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function playSound(type){
+  if(!soundOn)return;
+  try{
+    var ctx=getCtx(), now=ctx.currentTime;
+    var notes=type==='solve'?[523,659,784,1047]:[523,659,784,1047,1319];
+    notes.forEach(function(freq,i){
+      var osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value=freq; osc.type='sine';
+      var t=now+i*0.13;
+      gain.gain.setValueAtTime(0.16,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+      osc.start(t); osc.stop(t+0.25);
+    });
+  }catch(e){}
+}
+function toggleSound(){
+  soundOn=!soundOn;
+  var btn=document.getElementById('sound-btn');
+  btn.textContent=soundOn?'🔊 SOUND ON':'🔇 SOUND OFF';
+  btn.classList.toggle('muted',!soundOn);
+}
+document.addEventListener('click',function(){try{getCtx();}catch(e){}},{once:true});
+
+// ── MAP ────────────────────────────────────────────
+function initMap(){
+  mapObj=L.map('map',{zoomControl:true}).setView([49.2484,-124.8063],17);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(mapObj);
+  var homeIcon=L.divIcon({html:'<div style="font-size:22px;line-height:1">🏠</div>',className:'',iconAnchor:[11,22]});
+  L.marker([49.2492,-124.8063],{icon:homeIcon}).addTo(mapObj).bindPopup('<b>HQ — 4984 Spencer St</b>');
+  CLUE_META.forEach(function(cl,i){
+    var icon=makeIcon(i+1,'#b8860b','#d4a017');
+    var m=L.marker([cl.lat,cl.lng],{icon:icon}).addTo(mapObj)
+      .bindPopup('<b>Clue '+(i+1)+': '+cl.name+'</b><br>Word: <em>'+cl.word+'</em><br>Ravens: clue #'+cl.raven+' · Foxes: clue #'+cl.fox);
+    markers.push({m:m,meta:cl,idx:i});
+  });
+}
+function makeIcon(num,bg,border){
+  return L.divIcon({
+    html:'<div style="background:'+bg+';color:#120d07;font-family:serif;font-size:10px;font-weight:700;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid '+border+';box-shadow:0 2px 8px rgba(0,0,0,.5)">'+num+'</div>',
+    className:'',iconAnchor:[13,13]
+  });
+}
+function updateMarker(idx,solvedBy){
+  var colors={green:['#5fc47a','#fff'],purple:['#b07fe0','#fff'],both:['#e74c3c','#fff']};
+  var c=colors[solvedBy]||['#b8860b','#d4a017'];
+  markers[idx].m.setIcon(makeIcon(idx+1,c[0],c[1]));
+}
+
+// ── TIMER ──────────────────────────────────────────
+function startTimer(ts){
+  if(huntStartMs)return; huntStartMs=ts;
+  timerIv=setInterval(function(){
+    var e=Math.floor((Date.now()-huntStartMs)/1000);
+    var m=Math.floor(e/60),s=e%60;
+    document.getElementById('g-timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  },1000);
+}
+
+// ── LOG ────────────────────────────────────────────
+function addLog(icon,cls,label,msg){
+  var wrap=document.getElementById('log-wrap');
+  var d=new Date(), t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  var row=document.createElement('div'); row.className='log-row';
+  row.innerHTML='<div class="log-t">'+t+'</div><div class="log-ico">'+icon+'</div><div class="log-msg">'+(cls?'<span class="tag '+cls+'">'+label+'</span>':'')+msg+'</div>';
+  wrap.insertBefore(row,wrap.firstChild);
+}
+
+// ── ALERT ──────────────────────────────────────────
+function showAlert(msg){
+  var el=document.getElementById('alert');
+  el.textContent=msg; el.style.display='block';
+  setTimeout(function(){el.style.display='none';},4500);
+}
+
+// ── STATUS ─────────────────────────────────────────
+function setStatus(team,key){
+  var el=document.getElementById(team==='green'?'gs-pill':'ps-pill');
+  var labels={idle:'WAITING',hunting:'ON THE HUNT',final:'FINAL CLUE!',done:'FINISHED ✓'};
+  el.className='status-pill '+key; el.textContent=labels[key]||key.toUpperCase();
+}
+function setPips(team,solved,current){
+  var pfx=team==='green'?'gp':'pp';
+  for(var i=0;i<6;i++){
+    var pip=document.getElementById(pfx+i); pip.className='pip';
+    if(i<solved)pip.classList.add('solved-'+(team==='green'?'g':'p'));
+    else if(i===current)pip.classList.add('cur-'+(team==='green'?'g':'p'));
+  }
+}
+function fmtSec(sec){ if(!sec&&sec!==0)return '—'; var m=Math.floor(sec/60),s=sec%60; return m+'m '+String(s).padStart(2,'0')+'s'; }
+function fmtTs(ts){ if(!ts)return '—'; var d=new Date(ts); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'); }
+
+// ── PROCESS TEAM DATA ──────────────────────────────
+function processTeam(team, data){
+  if(!data)return;
+  var p=prev[team];
+  var label=team==='green'?'🌿 Ravens':'🦋 Foxes';
+  var cls=team==='green'?'g':'p';
+
+  if(data.started_at&&!huntStartMs)startTimer(new Date(data.started_at).getTime());
+
+  var solved=data.clues_solved||0;
+  setPips(team,solved,solved<6?solved:6);
+
+  var statusKey='idle';
+  if(data.status==='started'||data.status==='hunting')statusKey='hunting';
+  if(data.status==='final-accusation')statusKey='final';
+  if(data.status==='finished')statusKey='done';
+  setStatus(team,statusKey);
+
+  document.getElementById(team==='green'?'g-clue':'p-clue').textContent=
+    data.status==='finished'?'COMPLETE':data.status==='final-accusation'?'Making accusation…':
+    data.current_clue?'Clue '+data.current_clue+' of 6':'—';
+  document.getElementById(team==='green'?'g-solved':'p-solved').textContent=solved+' / 6';
+  document.getElementById(team==='green'?'g-last':'p-last').textContent=data.last_solved?data.last_solved+'  ('+fmtTs(data.last_solved_at)+')':'—';
+  var h=data.hints_used||0;
+  document.getElementById(team==='green'?'g-hints':'p-hints').textContent=h+' (+'+(h*30)+'s)';
+  document.getElementById(team==='green'?'g-elapsed':'p-elapsed').textContent=fmtSec(data.elapsed_sec);
+
+  // New clue solved?
+  var prevSolved=p?(p.clues_solved||0):0;
+  if(solved>prevSolved&&data.last_solved){
+    playSound('solve');
+    showAlert('✅ '+label+' solved: "'+data.last_solved+'"!');
+    addLog('✅',cls,label,'solved clue — <strong>"'+data.last_solved+'"</strong>  ('+fmtTs(data.last_solved_at)+')');
+    // Update map marker
+    var ravenOrder=[0,1,2,3,4,5], foxOrder=[3,4,5,0,1,2];
+    var order=team==='green'?ravenOrder:foxOrder;
+    var metaIdx=order[solved-1];
+    var other=prev[team==='green'?'purple':'green'];
+    var otherOrder=team==='green'?foxOrder:ravenOrder;
+    var otherSolved=false;
+    if(other){for(var i=0;i<(other.clues_solved||0);i++){if(otherOrder[i]===metaIdx){otherSolved=true;break;}}}
+    updateMarker(metaIdx,otherSolved?'both':team);
+  }
+  if(!p&&(data.status==='started'||data.status==='hunting'))addLog('🚀',cls,label,'started the hunt!');
+  if(data.status==='finished'&&(!p||p.status!=='finished')){
+    playSound('win'); showAlert('🏆 '+label+' FINISHED THE HUNT!');
+    addLog('🏆',cls,label,'CASE SOLVED! Time: <strong>'+fmtSec(data.final_time_sec)+'</strong>');
+  }
+  if(data.status==='final-accusation'&&(!p||p.status!=='final-accusation'))
+    addLog('🔎',cls,label,'is making the final accusation!');
+
+  prev[team]=Object.assign({},data);
+}
+
+// ── SUPABASE REALTIME ──────────────────────────────
+function connectRealtime(){
+  // First fetch current state
+  fetchAll();
+
+  // Then open a Realtime websocket for instant push updates
+  var wsUrl=SUPABASE_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SUPABASE_KEY+'&vsn=1.0.0';
+  var ws=new WebSocket(wsUrl);
+
+  ws.onopen=function(){
+    document.getElementById('live-dot').className='live-dot connected';
+    // Subscribe to hunt_progress table changes
+    ws.send(JSON.stringify({
+      topic:'realtime:public:hunt_progress',
+      event:'phx_join',
+      payload:{config:{broadcast:{self:false},presence:{key:''},postgres_changes:[{event:'*',schema:'public',table:'hunt_progress',filter:'hunt_id=eq.'+HUNT_ID}]}},
+      ref:'1'
+    }));
+  };
+
+  ws.onmessage=function(e){
+    try{
+      var msg=JSON.parse(e.data);
+      // Heartbeat reply
+      if(msg.event==='phx_reply'&&msg.payload&&msg.payload.response&&msg.payload.response.postgres_changes)return;
+      // Data change
+      if(msg.event==='postgres_changes'&&msg.payload&&msg.payload.data){
+        var row=msg.payload.data.record||msg.payload.data;
+        if(row&&row.team_id)processTeam(row.team_id,row);
+      }
+      // Heartbeat ping
+      if(msg.event==='heartbeat'){
+        ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'}));
+      }
+    }catch(err){}
+  };
+
+  ws.onclose=function(){
+    document.getElementById('live-dot').className='live-dot';
+    // Reconnect after 5s
+    setTimeout(connectRealtime,5000);
+  };
+
+  ws.onerror=function(){
+    document.getElementById('live-dot').className='live-dot';
+  };
+}
+
+// ── HTTP FETCH (initial load + fallback) ───────────
+async function fetchAll(){
+  try{
+    var r=await fetch(SUPABASE_URL+'/rest/v1/hunt_progress?hunt_id=eq.'+HUNT_ID,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(!r.ok)return;
+    var rows=await r.json();
+    rows.forEach(function(row){ processTeam(row.team_id,row); });
+  }catch(e){}
+}
+
+// Poll every 10s as safety net
+setInterval(fetchAll, 10000);
+
+// ── INIT ───────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',function(){
+  initMap();
+  connectRealtime();
+});
+</script>
+</body>
+</html>

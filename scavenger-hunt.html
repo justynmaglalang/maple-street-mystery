@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Maple Street Mystery</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#120d07;--parchment:#f6ead5;--parchment-mid:#eddbb8;--parchment-dark:#dfc89a;--blood:#7a1515;--blood-mid:#a01e1e;--blood-light:#c0392b;--gold:#9a7209;--gold-mid:#b8860b;--gold-light:#d4a017;--green-dark:#133d22;--green-mid:#1e5c33;--green-text:#5fc47a;--purple-dark:#2d1248;--purple-mid:#4a1d7a;--purple-text:#b07fe0;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Crimson Text',serif;background:radial-gradient(ellipse at top,#1a0f00 0%,#080500 100%);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:16px 12px 40px}
+.app{width:100%;max-width:460px}
+.screen{display:none}
+.screen.active{display:block;animation:rise .45s cubic-bezier(.22,.68,0,1.2) both}
+@keyframes rise{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.card{background:var(--parchment);border-radius:3px;position:relative;overflow:hidden;box-shadow:0 0 0 1px var(--gold-mid),0 0 0 5px #080500,0 0 0 6px var(--gold),0 16px 60px rgba(0,0,0,.85)}
+.card-inset{position:absolute;inset:8px;border:1px solid rgba(154,114,9,.22);pointer-events:none;z-index:50;border-radius:1px}
+.banner{background:var(--ink);padding:22px 20px 16px;text-align:center;position:relative}
+.banner::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-mid),transparent)}
+.banner-label{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:4px;color:var(--gold-mid);text-transform:uppercase;margin-bottom:7px;opacity:.85}
+.banner-title{font-family:'Cinzel',serif;font-size:clamp(22px,6vw,28px);font-weight:900;color:var(--parchment);line-height:1.1;letter-spacing:1px}
+.banner-title .accent{color:var(--blood-light)}
+.banner-sub{font-style:italic;font-size:12.5px;color:#907555;margin-top:6px}
+.card-body{padding:22px 20px 28px;position:relative}
+.story{border-left:3px solid var(--blood-mid);background:rgba(18,13,7,.05);padding:13px 15px;margin-bottom:18px;border-radius:0 2px 2px 0}
+.story p{font-size:15px;line-height:1.7;color:var(--ink)}.story p+p{margin-top:8px}.story em{color:var(--blood-mid);font-style:italic}.story strong{color:var(--ink);font-weight:600}
+.scroll{background:var(--parchment-mid);border:1px dashed rgba(154,114,9,.5);border-radius:2px;padding:16px 18px;margin-bottom:18px;text-align:center;position:relative}
+.scroll::before{content:attr(data-icon);position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:22px;line-height:1}
+.scroll p{font-family:'Cinzel',serif;font-size:13px;line-height:1.75;color:var(--ink)}
+.task-box{background:var(--ink);border-radius:2px;padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+.task-box .ti{font-size:22px;flex-shrink:0;margin-top:2px}.task-box p{font-size:13.5px;line-height:1.6;color:var(--parchment-mid)}.task-box strong{color:var(--gold-light)}
+.input-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--gold);display:block;margin-bottom:7px;text-transform:uppercase}
+.ans-inp{width:100%;padding:13px 14px;background:#fff;border:2px solid var(--parchment-dark);border-radius:2px;font-family:'Crimson Text',serif;font-size:17px;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+.ans-inp:focus{border-color:var(--gold-mid);box-shadow:0 0 0 3px rgba(184,134,11,.12)}.ans-inp.wrong{border-color:var(--blood-light);animation:jolt .35s ease}.ans-inp.right{border-color:var(--green-mid)}
+@keyframes jolt{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}60%{transform:translateX(7px)}}
+.sub-msg{font-size:12.5px;min-height:18px;margin-top:5px;font-style:italic}.sub-msg.ok{color:#1e5c33}.sub-msg.err{color:var(--blood-light)}.sub-msg.tip{color:#7a6030}
+.btn{display:block;width:100%;padding:14px;border-radius:2px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .18s;border:none;outline:none;min-height:44px}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--ink);color:var(--gold-light);border:1px solid var(--gold-mid)!important;margin-top:14px}.btn-p:hover{background:var(--gold-mid);color:var(--ink)}
+.btn-s{background:transparent;color:#8a7050;border:1px solid var(--parchment-dark)!important;margin-top:8px;font-size:10px;letter-spacing:1.5px}.btn-s:hover{background:var(--parchment-dark);color:var(--ink)}
+.btn-team{display:block;width:100%;padding:18px 16px;border-radius:2px;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-bottom:10px;text-align:left;min-height:44px}
+.btn-team .tn{font-weight:700;font-size:15px;display:block}.btn-team .th{font-size:11px;font-style:italic;letter-spacing:0;margin-top:3px;font-family:'Crimson Text',serif;opacity:.75}
+.btn-team.green{border:2px solid var(--green-mid);color:var(--green-dark);background:rgba(19,61,34,.08)}.btn-team.green:hover{background:var(--green-dark);color:var(--green-text)}
+.btn-team.purple{border:2px solid var(--purple-mid);color:var(--purple-dark);background:rgba(45,18,72,.08)}.btn-team.purple:hover{background:var(--purple-dark);color:var(--purple-text)}
+.prog-area{background:var(--ink);padding:12px 20px 10px;border-bottom:1px solid rgba(154,114,9,.2)}
+.prog-track{height:3px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-bottom:9px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blood-mid),var(--gold-mid));border-radius:10px;transition:width .5s ease}
+.prog-dots{display:flex;justify-content:space-between}
+.pdot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:8px;border:1px solid rgba(154,114,9,.25);color:rgba(255,255,255,.25);transition:all .3s}
+.pdot.done{background:var(--gold-mid);color:var(--ink);border-color:var(--gold-mid);font-size:11px}.pdot.now{background:var(--blood-mid);color:#fff;border-color:var(--blood-light)}
+.team-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:2px;font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2px;margin-top:9px;font-weight:700}
+.team-pill.green{background:var(--green-dark);color:var(--green-text);border:1px solid var(--green-mid)}.team-pill.purple{background:var(--purple-dark);color:var(--purple-text);border:1px solid var(--purple-mid)}
+.divider{display:flex;align-items:center;gap:10px;color:var(--gold-mid);font-size:11px;margin:18px 0;opacity:.6}.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--gold-mid)}
+.ev-rack{background:var(--ink);border-radius:2px;padding:12px 14px;margin:14px 0;display:flex;flex-wrap:wrap;gap:8px}
+.ev-tag{background:rgba(154,114,9,.15);border:1px solid rgba(154,114,9,.4);border-radius:2px;padding:4px 10px;font-family:'Cinzel',serif;font-size:10px;color:var(--gold-light);letter-spacing:1px}
+.prize-box{border-radius:2px;padding:16px;margin:10px 0;text-align:center}
+.prize-box.gold{background:linear-gradient(135deg,#2a1c00,#120d00);border:1px solid var(--gold-mid)}.prize-box.silver{background:linear-gradient(135deg,#131d15,#080e09);border:1px solid var(--green-mid)}
+.prize-box h3{font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;margin-bottom:8px}.prize-box.gold h3{color:var(--gold-light)}.prize-box.silver h3{color:var(--green-text)}
+.prize-box p{font-size:14.5px;font-style:italic;line-height:1.55}.prize-box.gold p{color:var(--parchment-mid)}.prize-box.silver p{color:#a0d4a8}
+.solved-stamp{position:absolute;top:18px;right:18px;border:2px solid var(--green-mid);color:var(--green-mid);font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;padding:3px 9px;transform:rotate(14deg);opacity:.85;display:none;z-index:10}
+.finish-time{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-mid);letter-spacing:2px;text-align:center;margin:10px 0}
+.big-icon{text-align:center;font-size:44px;margin:12px 0}.stars{text-align:center;font-size:26px;letter-spacing:8px;margin:8px 0 14px}
+.sync-dot{position:fixed;bottom:14px;right:14px;width:9px;height:9px;border-radius:50%;background:#444;z-index:100;transition:background .3s}
+.sync-dot.syncing{background:var(--gold-mid);animation:pulse .9s infinite}.sync-dot.ok{background:#2d9e52}.sync-dot.fail{background:var(--blood-light)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="screen active" id="s-splash">
+<div class="card"><div class="card-inset"></div>
+<div class="banner"><div class="banner-label">⚰ A Neighbourhood Mystery ⚰</div><div class="banner-title">The <span class="accent">Maple Street</span><br>Murders</div><div class="banner-sub">Case File No. 7 · All Agents Required</div></div>
+<div class="card-body">
+<div style="text-align:center;font-size:36px;margin-bottom:14px">🕵️‍♀️</div>
+<div class="story"><p>Three nights ago, <em>Mr. Edmund Finch</em> vanished without a trace.</p><p>His mailbox is overflowing. His cat is still waiting on the porch. His tea was found cold on the kitchen table — mid-pour.</p><p>The Neighbourhood Detective Agency has opened an official investigation. <strong>Two teams. Six clues. One suspect.</strong> Find the evidence before it disappears forever.</p></div>
+<div class="story" style="border-color:var(--gold-mid);background:rgba(154,114,9,.05)"><p>Both teams earn a prize for finishing — but the <em>team that finishes fastest</em> earns the top prize. Your clock starts the moment you step outside.</p></div>
+<div class="task-box"><div class="ti">⚠️</div><p><strong>Stay safe:</strong> Sidewalks and public streets only. <strong>Do not enter anyone's yard or driveway.</strong> Observe from the sidewalk at all times.</p></div>
+<button class="btn btn-p" onclick="go('s-team')">🔐 Begin Investigation</button>
+</div></div></div>
+
+<div class="screen" id="s-team">
+<div class="card"><div class="card-inset"></div>
+<div class="banner"><div class="banner-label">Agent Division Selection</div><div class="banner-title">Choose Your <span class="accent">Team</span></div><div class="banner-sub">One team per phone</div></div>
+<div class="card-body">
+<div class="story"><p>The team leader holds the phone. Both members work together. You'll get the same 6 clues as the other team — but in a <em>different order</em>, so you can't just follow each other.</p></div>
+<button class="btn-team green" onclick="pickTeam('green')"><span class="tn">🌿 THE RAVENS</span><span class="th">Phone 1 — your route starts near home</span></button>
+<button class="btn-team purple" onclick="pickTeam('purple')"><span class="tn">🦋 THE FOXES</span><span class="th">Phone 2 — your route starts down the street</span></button>
+</div></div></div>
+
+<div class="screen" id="s-brief">
+<div class="card"><div class="card-inset"></div>
+<div class="banner"><div class="banner-label">Mission Briefing</div><div class="banner-title">Agent <span class="accent">Orders</span></div><div id="brief-pill"></div></div>
+<div class="card-body">
+<div class="story"><p>You are Special Investigators. <em>Six clues</em> point you to real things in the neighbourhood. Each is a riddle — find what it describes, then <strong>type the secret word</strong> to unlock the next clue.</p><p>At the end, the first letter of each word spells the <em>suspect's last name.</em></p></div>
+<div class="task-box"><div class="ti">📋</div><p><strong>Field Rules:</strong> Sidewalks only — <strong>never on anyone's grass or driveway.</strong> Work as a team. Hints cost <strong>30 seconds</strong>. Your progress is reported to HQ automatically.</p></div>
+<button class="btn btn-p" onclick="startHunt()">🗺 Start the Hunt →</button>
+</div></div></div>
+
+<div class="screen" id="s-clue">
+<div class="card"><div class="card-inset"></div>
+<div class="prog-area" id="prog-area"></div>
+<div class="banner"><div class="banner-label" id="clue-label"></div><div class="banner-title" id="clue-title"></div><div id="clue-pill"></div></div>
+<div class="card-body">
+<div class="solved-stamp" id="solved-stamp">SOLVED ✓</div>
+<div class="story" id="clue-story"></div>
+<div class="scroll" id="clue-scroll" data-icon="🔍"></div>
+<label class="input-label">🔑 Secret Word</label>
+<input class="ans-inp" id="ans-input" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+<p class="sub-msg" id="ans-msg"></p>
+<button class="btn btn-p" onclick="checkAns()">Submit Evidence →</button>
+<button class="btn btn-s" onclick="useHint()">💡 Request a Hint  (+30 sec penalty)</button>
+</div></div></div>
+
+<div class="screen" id="s-solved">
+<div class="card"><div class="card-inset"></div>
+<div class="banner"><div class="banner-label" id="sol-label">Evidence Secured</div><div class="banner-title"><span class="accent">Clue</span> Solved!</div></div>
+<div class="card-body" style="text-align:center">
+<div class="big-icon">✅</div>
+<p id="sol-word" style="font-family:'Cinzel',serif;font-size:24px;color:var(--blood-mid);letter-spacing:4px;margin-bottom:10px"></p>
+<div class="story" style="text-align:left"><p id="sol-flavour"></p></div>
+<div class="ev-rack" id="ev-rack"></div>
+<button class="btn btn-p" onclick="nextClue()">→ Next Clue</button>
+</div></div></div>
+
+<div class="screen" id="s-final">
+<div class="card"><div class="card-inset"></div>
+<div class="banner"><div class="banner-label">⚠ All Evidence Collected ⚠</div><div class="banner-title">Name the <span class="accent">Suspect</span></div></div>
+<div class="card-body">
+<div class="story"><p>You have collected all six secret words. Write down the <em>first letter of each word</em> in order — those letters spell the suspect's last name.</p></div>
+<div class="scroll" data-icon="📜" id="final-scroll" style="text-align:left"></div>
+<div class="task-box" style="margin-bottom:16px"><div class="ti">✏️</div><p>Write the first letter of each word on your hand, then <strong>figure out the last name.</strong> It's 8 letters.</p></div>
+<label class="input-label">🔎 Suspect's Last Name</label>
+<input class="ans-inp" id="final-input" type="text" placeholder="Enter the last name…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+<p class="sub-msg" id="final-msg"></p>
+<button class="btn btn-p" onclick="checkFinal()">⚖ Make Your Accusation</button>
+</div></div></div>
+
+<div class="screen" id="s-win">
+<div class="card"><div class="card-inset"></div>
+<div class="banner"><div class="banner-label">🏆 Case Closed</div><div class="banner-title">Mystery <span class="accent">Solved!</span></div></div>
+<div class="card-body">
+<div class="stars">⭐⭐⭐</div>
+<div class="story"><p>The culprit was <em>Professor Holloway</em> — the retired science teacher from two streets over, feuding with Mr. Finch over a stolen garden gnome for six years.</p><p>Mr. Finch was found safe at his sister's cabin. Case <strong>officially closed.</strong> Outstanding detective work.</p></div>
+<div class="finish-time" id="win-time"></div>
+<div class="divider">Your Prize</div>
+<div class="prize-box gold" id="prize-a" style="display:none"><h3>🥇 PRIZE A — FASTEST TEAM</h3><p>Your team finished first! Show this screen to Mom or Dad to claim <strong>Prize A</strong>.</p></div>
+<div class="prize-box silver"><h3>🎉 PRIZE B — ALL FINISHERS WIN</h3><p>Every detective who finishes earns a reward. Show this screen to claim <strong>Prize B</strong>!</p></div>
+<p style="font-size:11px;color:#888;font-style:italic;text-align:center;margin-top:16px">Screenshot this screen — then find Mom &amp; Dad!</p>
+</div></div></div>
+
+</div>
+<div class="sync-dot" id="sync-dot"></div>
+<script>
+// ╔══════════════════════════════════════════════════╗
+// ║  STEP 1: Go to supabase.com → New Project       ║
+// ║  STEP 2: Settings → API → copy both values       ║
+// ║  STEP 3: Paste them below in both HTML files     ║
+// ╚══════════════════════════════════════════════════╝
+const SUPABASE_URL = 'https://ppctgsfzpylpyryoufgm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1FfCl66XeOg6mYRnnrxmRg_Vw_N0WW0';
+const HUNT_ID = 'maple_2024';
+
+async function sbSync(data) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot syncing';
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/hunt_progress', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(Object.assign({ hunt_id: HUNT_ID, team_id: team, updated_at: new Date().toISOString() }, data))
+    });
+    dot.className = r.ok ? 'sync-dot ok' : 'sync-dot fail';
+    setTimeout(function(){ dot.className = 'sync-dot'; }, 2500);
+  } catch(e) {
+    dot.className = 'sync-dot fail';
+  }
+}
+
+const CLUES = [
+  { label:'Clue 1 of 6 · Garden Evidence', title:'The Green Wall',
+    story:'In Mr. Finch\'s notebook, the last sketch shows a <em>row of thick green shrubs</em> along a property line. He\'d circled it and written: <em>"This is where it all started."</em>',
+    riddle:'I am not a fence, but I mark a border.\nI am grown, not built — leafy, green, and in order.\nHomeowners trim me with clippers each summer.\nI line the edge of yards like a living wall.\n\nFind a row of dense shrubs dividing two yards on your street.\nWhat is the one word for this kind of planted boundary?\n\n⚠ Stay on the sidewalk — observe from the street.',
+    icon:'🌿', answer:'hedge', alts:['hedges','hedgerow'],
+    hint:'A row of thick bushes that works like a fence between two yards. Starts with H. Five letters.',
+    word:'HEDGE', flavour:'The hedge between Finch\'s yard and his neighbour\'s — exactly where the argument over the garden gnome first started six years ago.' },
+  { label:'Clue 2 of 6 · The Address', title:'Numbers Don\'t Lie',
+    story:'A witness described the suspect\'s path: <em>"They turned at the house with the odd number."</em> To trace the route, investigators need to understand how street addresses work.',
+    riddle:'Walk to the nearest house with a visible number\non the door, mailbox, or curb.\nLook at the number — from the sidewalk.\n\nNumbers split into two types:\nsome are divisible by 2 — those are EVEN.\nThe ones that are NOT divisible by 2 are called what?\n\n(1, 3, 5, 7, 9 are all this type of number.)',
+    icon:'🏠', answer:'odd', alts:[],
+    hint:'If 2, 4, 6, 8 are EVEN... then 1, 3, 5, 7 are ___? Three letters.',
+    word:'ODD', flavour:'The house at the odd-numbered address — where a witness saw a figure watching from the driveway at midnight.' },
+  { label:'Clue 3 of 6 · Nature\'s Fingerprint', title:'Fallen Evidence',
+    story:'A single pressed specimen was found inside Mr. Finch\'s journal. Its shape tells investigators which tree it fell from — and which yard the suspect may have been hiding near.',
+    riddle:'Go find one on the ground right now —\nfrom a sidewalk crack, a gutter, or a boulevard strip.\nPick it up and examine it.\nCount its points. Feel its texture.\n\nWhat is the simple one-word name\nfor this flat green (or brown) thing\nthat grows on trees and falls off each autumn?\n\n⚠ Pick it up from the sidewalk — not from anyone\'s yard.',
+    icon:'🍂', answer:'leaf', alts:['leaves'],
+    hint:'It grows on trees and falls in autumn. Find one on the sidewalk right now. Four letters.',
+    word:'LEAF', flavour:'The fallen leaf matched a maple tree — placing the suspect within three houses of the scene on the night of the disappearance.' },
+  { label:'Clue 4 of 6 · Vehicle Evidence', title:'The Getaway Car',
+    story:'<em>"A vehicle was seen leaving at high speed,"</em> read the police report. The witness noted the province on the plate but forgot the number combination.',
+    riddle:'Find a car parked on the street — from the sidewalk.\nLook at the plate on the front or back.\nYou will see letters and numbers.\n\nThis plate is also called a ______ plate.\nDrivers must renew this document every year.\n\nWhat is the word for this document\nthat also gives the plate its common name?\n(Starts with L — it\'s what you need to legally drive.)\n\n⚠ Observe from the sidewalk only.',
+    icon:'🚗', answer:'license', alts:['licence','registration','plate','plates'],
+    hint:'The thing you must renew each year to legally drive. Also the name for the plate on a car. Starts with L.',
+    word:'LICENSE', flavour:'BC plates — the getaway car was local. The suspect hadn\'t even bothered to hide the vehicle.' },
+  { label:'Clue 5 of 6 · An Unlocked Secret', title:'Left Unsecured',
+    story:'Investigators believe the suspect moved through the neighbourhood by exploiting careless neighbours. <em>"They always find the unlocked door,"</em> one detective noted.',
+    riddle:'Walk slowly and scan the properties around you — from the sidewalk.\nFind something left in an unsecured state:\na garage door raised up,\na side gate left unlatched,\na recycling bin with its lid flipped back,\na car window rolled down.\n\nStand on the sidewalk and observe.\n\nWhat single word describes the opposite of CLOSED?\nThe word for a door or gate that is not shut.',
+    icon:'🚪', answer:'open', alts:['ajar','unlocked'],
+    hint:'The opposite of closed. A door that is not shut is ___. Four letters.',
+    word:'OPEN', flavour:'Someone had left their garage door up all evening — the suspect used it as cover to observe the street undetected.' },
+  { label:'Clue 6 of 6 · The Final Trail', title:'A Friendly Disguise',
+    story:'The final entry in Mr. Finch\'s journal read: <em>"Someone knocked. They seemed perfectly ordinary. They even wiped their feet."</em>',
+    riddle:'Every front entrance has one — or used to.\nIt lies flat on the ground just outside the door:\na rectangle of rough bristly material\nthat visitors step on before entering.\n\nSome say HOME. Some have a paw print.\nBut the most common word printed on these mats\nis a friendly greeting of six letters.\n\nFind a door mat visible from the sidewalk on any front porch.\nWhat word is most often printed on them?\n\n⚠ Stay on the sidewalk — look from the path.',
+    icon:'🚪', answer:'welcome', alts:['mat','doormat','welcome mat'],
+    hint:'Look at any front door mat visible from the sidewalk. What word is usually written on it? Six letters, starts with W.',
+    word:'WELCOME', flavour:'The suspect wiped their boots on the mat — cool, calm, acting like a guest. Nobody watching would have suspected a thing.' }
+];
+
+function getOrder(){ return team==='green'?[0,1,2,3,4,5]:[3,4,5,0,1,2]; }
+var team=null,ci=0,collected=[],startMs=null,penaltySec=0,hintUsed=false;
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function pill(t){
+  return t==='green'?'<div class="team-pill green">🌿 RAVENS</div>':'<div class="team-pill purple">🦋 FOXES</div>';
+}
+function pickTeam(t){ team=t; document.getElementById('brief-pill').innerHTML=pill(t); go('s-brief'); }
+function startHunt(){
+  startMs=Date.now(); ci=0; collected=[]; penaltySec=0; hintUsed=false;
+  sbSync({status:'started',current_clue:1,clues_solved:0,started_at:new Date().toISOString(),team_name:team==='green'?'🌿 Ravens':'🦋 Foxes',hints_used:0,penalty_sec:0,elapsed_sec:0,last_solved:null});
+  renderClue(); go('s-clue');
+}
+function renderClue(){
+  var c=CLUES[getOrder()[ci]]; hintUsed=false;
+  var dots='';
+  for(var i=0;i<6;i++){ var cls=i<ci?'done':i===ci?'now':''; dots+='<div class="pdot '+cls+'">'+(i<ci?'✓':i+1)+'</div>'; }
+  document.getElementById('prog-area').innerHTML='<div class="prog-track"><div class="prog-fill" style="width:'+Math.round(ci/6*100)+'%"></div></div><div class="prog-dots">'+dots+'</div>';
+  document.getElementById('clue-label').textContent=c.label;
+  document.getElementById('clue-title').innerHTML=c.title.replace(/(\S+)$/,'<span class="accent">$1</span>');
+  document.getElementById('clue-pill').innerHTML=pill(team);
+  document.getElementById('clue-story').innerHTML='<p>'+c.story+'</p>';
+  var sc=document.getElementById('clue-scroll'); sc.setAttribute('data-icon',c.icon); sc.innerHTML='<p>'+c.riddle.replace(/\n/g,'<br>')+'</p>';
+  document.getElementById('solved-stamp').style.display='none';
+  document.getElementById('ans-input').value=''; document.getElementById('ans-input').className='ans-inp';
+  document.getElementById('ans-msg').textContent=''; document.getElementById('ans-msg').className='sub-msg';
+}
+function norm(s){ return s.trim().toLowerCase().replace(/[^a-z]/g,''); }
+function checkAns(){
+  var c=CLUES[getOrder()[ci]],inp=document.getElementById('ans-input'),val=norm(inp.value);
+  var ok=val===norm(c.answer)||c.alts.map(norm).indexOf(val)>-1;
+  if(ok){
+    inp.className='ans-inp right';
+    var msg=document.getElementById('ans-msg'); msg.textContent='✓ Correct! Evidence secured.'; msg.className='sub-msg ok';
+    document.getElementById('solved-stamp').style.display='block';
+    collected.push(c.word);
+    sbSync({status:'hunting',current_clue:ci+2,clues_solved:collected.length,last_solved:c.word,last_solved_at:new Date().toISOString(),elapsed_sec:Math.floor((Date.now()-startMs)/1000),hints_used:penaltySec/30,penalty_sec:penaltySec});
+    setTimeout(function(){
+      document.getElementById('sol-label').textContent=c.label;
+      document.getElementById('sol-word').textContent='"'+c.word+'"';
+      document.getElementById('sol-flavour').textContent=c.flavour;
+      document.getElementById('ev-rack').innerHTML=collected.map(function(w){return '<div class="ev-tag">'+w[0]+' — '+w+'</div>';}).join('');
+      go('s-solved');
+    },550);
+  } else {
+    inp.className='ans-inp wrong';
+    var msg=document.getElementById('ans-msg'); msg.textContent='✗ Not quite — look again and try another word.'; msg.className='sub-msg err';
+    setTimeout(function(){inp.className='ans-inp';},400);
+  }
+}
+function useHint(){
+  var msg=document.getElementById('ans-msg');
+  if(hintUsed){msg.textContent='Hint already used. (+30 sec applied)';msg.className='sub-msg tip';return;}
+  var c=CLUES[getOrder()[ci]]; hintUsed=true; penaltySec+=30;
+  msg.textContent='💡 Hint: '+c.hint+'  (+30 sec penalty applied)'; msg.className='sub-msg tip';
+  sbSync({hints_used:penaltySec/30,penalty_sec:penaltySec});
+}
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  if(document.getElementById('s-clue').classList.contains('active'))checkAns();
+  if(document.getElementById('s-final').classList.contains('active'))checkFinal();
+});
+function nextClue(){ ci++; if(ci>=6){showFinal();return;} renderClue(); go('s-clue'); }
+function showFinal(){
+  var lines=collected.map(function(w,i){return (i+1)+'. '+w+' &nbsp;→&nbsp; <strong>'+w[0]+'</strong>';}).join('<br>');
+  var inits=collected.map(function(w){return w[0];}).join('&nbsp;&nbsp;');
+  document.getElementById('final-scroll').innerHTML='<p style="text-align:left">'+lines+'<br><br>Letters in order:&nbsp; <strong style="letter-spacing:6px;font-size:16px">'+inits+'</strong></p>';
+  sbSync({status:'final-accusation',current_clue:7,clues_solved:6});
+  go('s-final');
+}
+function checkFinal(){
+  var val=norm(document.getElementById('final-input').value);
+  var msg=document.getElementById('final-msg');
+  if(['holloway','holoway','professor','professorholloway'].indexOf(val)>-1){
+    msg.textContent="✓ That's the one!"; msg.className='sub-msg ok';
+    setTimeout(showVictory,700);
+  } else { msg.textContent='✗ Read the first letter of each word in order.'; msg.className='sub-msg err'; }
+}
+function showVictory(){
+  var elapsed=Math.floor((Date.now()-startMs)/1000)+penaltySec;
+  var m=Math.floor(elapsed/60),s=elapsed%60;
+  document.getElementById('win-time').textContent='⏱ Finished in '+m+'m '+String(s).padStart(2,'0')+'s'+(penaltySec?' (includes '+penaltySec+'s hint penalty)':'');
+  sbSync({status:'finished',final_time_sec:elapsed,finished_at:new Date().toISOString(),clues_solved:6,current_clue:7});
+  var isFirst=false;
+  try{ var k='mapleSt_v4',prev=localStorage.getItem(k); if(!prev){localStorage.setItem(k,JSON.stringify({team:team,elapsed:elapsed}));isFirst=true;}else if(elapsed<JSON.parse(prev).elapsed)isFirst=true; }catch(e){isFirst=true;}
+  if(isFirst)document.getElementById('prize-a').style.display='block';
+  go('s-win');
+}
+</script>
+</body>
+</html>
