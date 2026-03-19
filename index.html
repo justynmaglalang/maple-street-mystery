@@ -73,7 +73,7 @@ body{font-family:'Crimson Text',serif;background:radial-gradient(ellipse at top,
 <div class="banner"><div class="banner-label">⚰ A Neighbourhood Mystery ⚰</div><div class="banner-title">The <span class="accent">Maple Street</span><br>Murders</div><div class="banner-sub">Case File No. 7 · All Agents Required</div></div>
 <div class="card-body">
 <div style="text-align:center;font-size:36px;margin-bottom:14px">🕵️‍♀️</div>
-<div class="story"><p>Three nights ago, <em>Mr. Edmund Finch</em> vanished without a trace.</p><p>His mailbox is overflowing. His cat is still waiting on the porch. His tea was found cold on the kitchen table — mid-pour.</p><p>The Neighbourhood Detective Agency has opened an official investigation. <strong>Two teams. Six clues. One suspect.</strong> Find the evidence before it disappears forever.</p></div>
+<div class="story"><p>Three nights ago, <em>Mr. Edmund Finch</em> vanished without a trace.</p><p>His mailbox is overflowing. His cat is still waiting on the porch. His tea was found cold on the kitchen table — mid-pour.</p><p>One name keeps coming up in witness statements: <em>Professor Holloway</em> — a bitter retired science teacher from two streets over. But there's no proof. Yet.</p><p>The Neighbourhood Detective Agency has opened an official investigation. <strong>Two teams. Six clues. One suspect.</strong> Find the evidence before it disappears forever.</p></div>
 <div class="story" style="border-color:var(--gold-mid);background:rgba(154,114,9,.05)"><p>Both teams earn a prize for finishing — but the <em>team that finishes fastest</em> earns the top prize. Your clock starts the moment you step outside.</p></div>
 <div class="task-box"><div class="ti">⚠️</div><p><strong>Stay safe:</strong> Sidewalks and public streets only. <strong>Do not enter anyone's yard or driveway.</strong> Observe from the sidewalk at all times.</p></div>
 <button class="btn btn-p" onclick="go('s-team')">🔐 Begin Investigation</button>
@@ -92,7 +92,7 @@ body{font-family:'Crimson Text',serif;background:radial-gradient(ellipse at top,
 <div class="card"><div class="card-inset"></div>
 <div class="banner"><div class="banner-label">Mission Briefing</div><div class="banner-title">Agent <span class="accent">Orders</span></div><div id="brief-pill"></div></div>
 <div class="card-body">
-<div class="story"><p>You are Special Investigators. <em>Six clues</em> point you to real things in the neighbourhood. Each is a riddle — find what it describes, then <strong>type the secret word</strong> to unlock the next clue.</p><p>At the end, the first letter of each word spells the <em>suspect's last name.</em></p></div>
+<div class="story"><p>You are Special Investigators. <em>Six clues</em> point you to real things in the neighbourhood. Each is a riddle — find what it describes, then <strong>type the secret word</strong> to unlock the next clue.</p><p>At the end, the first letter of each word spells the <em>suspect's last name.</em> You already have one lead — keep <strong>Holloway</strong> in mind.</p></div>
 <div class="task-box"><div class="ti">📋</div><p><strong>Field Rules:</strong> Sidewalks only — <strong>never on anyone's grass or driveway.</strong> Work as a team. Hints cost <strong>30 seconds</strong>. Your progress is reported to HQ automatically.</p></div>
 <button class="btn btn-p" onclick="startHunt()">🗺 Start the Hunt →</button>
 </div></div></div>
@@ -129,7 +129,7 @@ body{font-family:'Crimson Text',serif;background:radial-gradient(ellipse at top,
 <div class="card-body">
 <div class="story"><p>You have collected all six secret words. Write down the <em>first letter of each word</em> in order — those letters spell the suspect's last name.</p></div>
 <div class="scroll" data-icon="📜" id="final-scroll" style="text-align:left"></div>
-<div class="task-box" style="margin-bottom:16px"><div class="ti">✏️</div><p>Write the first letter of each word on your hand, then <strong>figure out the last name.</strong> It's 8 letters.</p></div>
+<div class="task-box" style="margin-bottom:16px"><div class="ti">✏️</div><p>Write the first letter of each word on your hand. The letters spell the last name of the suspect named at the very start of this investigation. <strong>You've heard the name before — enter their last name now.</strong></p></div>
 <label class="input-label">🔎 Suspect's Last Name</label>
 <input class="ans-inp" id="final-input" type="text" placeholder="Enter the last name…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
 <p class="sub-msg" id="final-msg"></p>
@@ -157,8 +157,8 @@ body{font-family:'Crimson Text',serif;background:radial-gradient(ellipse at top,
 // ║  STEP 2: Settings → API → copy both values       ║
 // ║  STEP 3: Paste them below in both HTML files     ║
 // ╚══════════════════════════════════════════════════╝
-const SUPABASE_URL = 'https://ppctgsfzpylpyryoufgm.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_1FfCl66XeOg6mYRnnrxmRg_Vw_N0WW0';
+const SUPABASE_URL = 'PASTE_YOUR_PROJECT_URL_HERE';
+const SUPABASE_KEY = 'PASTE_YOUR_ANON_PUBLIC_KEY_HERE';
 const HUNT_ID = 'maple_2024';
 
 async function sbSync(data) {
@@ -190,7 +190,7 @@ const CLUES = [
     hint:'A row of thick bushes that works like a fence between two yards. Starts with H. Five letters.',
     word:'HEDGE', flavour:'The hedge between Finch\'s yard and his neighbour\'s — exactly where the argument over the garden gnome first started six years ago.' },
   { label:'Clue 2 of 6 · The Address', title:'Numbers Don\'t Lie',
-    story:'A witness described the suspect\'s path: <em>"They turned at the house with the odd number."</em> To trace the route, investigators need to understand how street addresses work.',
+    story:'A witness described the suspect\'s path: <em>"They turned at the house with the odd number."</em> Another witness added quietly: <em>"I'm pretty sure it was that Holloway fellow."</em> Investigators need to trace the exact route.',
     riddle:'Walk to the nearest house with a visible number\non the door, mailbox, or curb.\nLook at the number — from the sidewalk.\n\nNumbers split into two types:\nsome are divisible by 2 — those are EVEN.\nThe ones that are NOT divisible by 2 are called what?\n\n(1, 3, 5, 7, 9 are all this type of number.)',
     icon:'🏠', answer:'odd', alts:[],
     hint:'If 2, 4, 6, 8 are EVEN... then 1, 3, 5, 7 are ___? Three letters.',
@@ -298,10 +298,10 @@ function showFinal(){
 function checkFinal(){
   var val=norm(document.getElementById('final-input').value);
   var msg=document.getElementById('final-msg');
-  if(['holloway','holoway','professor','professorholloway'].indexOf(val)>-1){
+  if(['holloway','professorholloway'].indexOf(val)>-1){
     msg.textContent="✓ That's the one!"; msg.className='sub-msg ok';
     setTimeout(showVictory,700);
-  } else { msg.textContent='✗ Read the first letter of each word in order.'; msg.className='sub-msg err'; }
+  } else { msg.textContent='✗ Think back to the suspect named at the very start of your briefing.'; msg.className='sub-msg err'; }
 }
 function showVictory(){
   var elapsed=Math.floor((Date.now()-startMs)/1000)+penaltySec;
